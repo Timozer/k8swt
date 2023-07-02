@@ -1,0 +1,107 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: k8swt
+    name: k8swt-term
+  name: k8swt
+  namespace: default
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: k8swt
+      name: k8swt-term
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: k8swt
+        name: k8swt-term
+      name: k8swt
+      namespace: default
+    spec:
+      # nodeSelector:
+        # kubernetes.io/arch: amd64
+      serviceAccountName: k8swt
+      containers:
+      - name: k8swt
+        image: k8swt:v1
+        imagePullPolicy: Always
+        resources:
+          limits:
+            cpu: "1"
+            memory: 3Gi
+          requests:
+            cpu: "1"
+            memory: "2Gi"
+        securityContext:
+          privileged: false
+        terminationMessagePath: /dev/k8swt-log
+        terminationMessagePolicy: File
+        securityContext: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: k8swt
+    name: k8swt-term
+  name: k8swt
+  namespace: default
+spec:
+  ports:
+  - name: k8swt
+    nodePort: 32080
+    port: 8080
+    targetPort: 8080
+  selector:
+    app: k8swt
+    name: k8swt-term
+  sessionAffinity: None
+  type: NodePort
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8swt
+  namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: k8swt
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  - namespaces
+  - pods
+  - pods/exec
+  - services
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: k8swt
+roleRef:
+  apiGroup: rbac.authorization.k8s.io/v1
+  kind: ClusterRole
+  name: k8swt
+subjects:
+- kind: ServiceAccount
+  name: k8swt
+  namespace: default
