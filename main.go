@@ -55,8 +55,8 @@ func main() {
 
 	r := gin.Default()
 	r.Use(ReqId(), Logger())
-	r.Static("/js", "./web/dist/js")
-	r.LoadHTMLGlob("web/dist/*.html")
+	r.Static("/js", "./dist/js")
+	r.LoadHTMLGlob("./dist/*.html")
 
 	r.GET("/", controllers.Index)
 	r.GET("/ws", controllers.WsProcess)
