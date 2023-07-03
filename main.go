@@ -29,14 +29,8 @@ func Logger() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		reqId := c.GetString(common.HEADER_REQ_ID)
 		logger := log.With().Str("ReqId", reqId).Logger()
+		logger.Debug().Str("Query", c.Request.URL.RawQuery).Msg("")
 		c.Set(common.CTX_LOGGER, &logger)
-		c.Next()
-	}
-}
-
-func TermVars(args *Arguments) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Set(common.TERM_SHELLS, *args.Shells)
 		c.Next()
 	}
 }
@@ -63,7 +57,6 @@ type Arguments struct {
 	Dev      *bool
 	Port     *string
 	LogLevel *int
-	Shells   *string
 }
 
 var (
@@ -74,7 +67,6 @@ func init() {
 	gArgs.Dev = flag.Bool("dev", false, "dev mode")
 	gArgs.Port = flag.String("port", "8080", "http port")
 	gArgs.LogLevel = flag.Int("loglevel", 1, "log level: -1 trace, 0 debug, 1 info, 2 warn, 3 error, 4 fatal, 5 panic, 6 nolevel, 7 disabled")
-	gArgs.Shells = flag.String("shells", "/bin/bash:/bin/sh", "the shells to use, seprated by colon")
 }
 
 func main() {
@@ -98,7 +90,7 @@ func main() {
 	}
 
 	r.GET("/", controllers.Index)
-	r.GET("/ws", TermVars(gArgs), controllers.WsProcess)
+	r.GET("/ws", controllers.WsProcess)
 	r.GET("/api/pods", controllers.Pods)
 
 	r.Run(":" + *gArgs.Port)

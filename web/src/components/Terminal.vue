@@ -45,6 +45,8 @@ import 'xterm/css/xterm.css'
 
 const fitAddon = new FitAddon();
 
+var skipQueryParams = {"envs": "", "cmds": ""};
+
 export default {
     // eslint-disable-next-line
     name: 'Terminal',
@@ -70,16 +72,16 @@ export default {
             let protocol = (location.protocol === 'https:') ? 'wss://' : 'ws://';
             let url = protocol + location.hostname + ((location.port) ? (':' + location.port) : '') + '/ws';
             let queryParams = this.$route.query;
-            if (queryParams.namespace === undefined) {
-                queryParams.namespace = "";
+
+            url += '?';
+            for (var key in queryParams) {
+                if (key in skipQueryParams) {
+                    console.log(key, " in skip query params")
+                    skipQueryParams[key] = decodeURI(queryParams[key]);
+                } else {
+                    url += '&' + key + '=' + encodeURIComponent(queryParams[key]);
+                }
             }
-            if (queryParams.podname === undefined) {
-                queryParams.podname = "";
-            }
-            if (queryParams.ip === undefined) {
-                queryParams.ip = "";
-            }
-            url += '?podname=' + queryParams.podname + '&ip=' + queryParams.ip + '&namespace=' + queryParams.namespace;
 
             console.log("socket url:", url)
             this.ws = new WebSocket(url);
@@ -116,6 +118,13 @@ export default {
             window.addEventListener("resize", this.onResize)
 
             this.term = term
+
+            setTimeout(() => {}, 1000);
+
+            this.sendEnvs();
+            this.sendCmds();
+
+            this.term.focus();
         },
         wsOnClose() {
             if (this.term) {
@@ -131,6 +140,26 @@ export default {
         },
         wsOnMessage(e) {
             console.log("web socket msg event", e)
+        },
+        sendEnvs() {
+            let envStr = "";
+            let envs = skipQueryParams["envs"].split(";");
+            envs.forEach(k => {
+                envStr += "export " + k + "; "
+            })
+            if (envStr.length > 0) {
+                this.ws.send(envStr)
+            }
+        },
+        sendCmds() {
+            let cmdStr = ""
+            let cmds = skipQueryParams["cmds"].split(";");
+            cmds.forEach(k => {
+                cmdStr += k + "\n"
+            })
+            if (cmdStr.length > 0) {
+                this.ws.send(cmdStr)
+            }
         },
         onSend(type, data) {
             let d = {

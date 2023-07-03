@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/Timozer/k8swt/common"
 	"github.com/Timozer/k8swt/k8s"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -46,7 +45,8 @@ func WsProcess(c *gin.Context) {
 	tmp := strings.ReplaceAll(string(datas), "\n", "\r\n")
 	wsConn.Write(websocket.TextMessage, []byte(tmp))
 
-	shells := strings.Split(c.GetString(common.TERM_SHELLS), ":")
+	shells := strings.Split(c.DefaultQuery("shells", "/bin/bash:/bin/sh"), ":")
+	logger.Debug().Str("shells", strings.Join(shells, ":")).Msg("")
 	for _, shell := range shells {
 		err = RunTerminal(c.Request.Context(), wsConn, &pod, shell)
 		if err != nil {
