@@ -22,7 +22,7 @@ func listPods(c *gin.Context) ([]v1.Pod, error) {
 	podName := c.DefaultQuery("podname", "")
 	podIP := c.DefaultQuery("ip", "")
 
-	logger.Info().Str("Namespace", namespace).Str("PodName", podName).Str("IP", podIP).Msg("")
+	logger.Debug().Str("Namespace", namespace).Str("PodName", podName).Str("IP", podIP).Msg("")
 
 	selector := ""
 	if len(podName) > 0 {

@@ -1,10 +1,12 @@
 package controllers
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"strings"
 
+	"github.com/Timozer/k8swt/common"
 	"github.com/Timozer/k8swt/k8s"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -38,39 +40,44 @@ func WsProcess(c *gin.Context) {
 		logger.Error().Err(err).Msg("open websocket conn fail")
 		return
 	}
+	// defer wsConn.Close()
 
 	datas, _ := ioutil.ReadFile("conf/banner")
 	tmp := strings.ReplaceAll(string(datas), "\n", "\r\n")
 	wsConn.Write(websocket.TextMessage, []byte(tmp))
 
-	validbashs := []string{"/bin/bash", "/bin/sh"}
-	for _, testShell := range validbashs {
-		req := k8s.GetClient().Client.CoreV1().RESTClient().Post().Resource("pods").
-			Name(pod.Name).Namespace(pod.Namespace).SubResource("exec").
-			VersionedParams(&v1.PodExecOptions{
-				Container: pod.Status.ContainerStatuses[0].Name,
-				Command:   []string{testShell},
-				Stdin:     true,
-				Stdout:    true,
-				Stderr:    true,
-				TTY:       true,
-			}, scheme.ParameterCodec)
-
-		executor, err := remotecommand.NewSPDYExecutor(k8s.GetClient().Config, "POST", req.URL())
+	shells := strings.Split(c.GetString(common.TERM_SHELLS), ":")
+	for _, shell := range shells {
+		err = RunTerminal(c.Request.Context(), wsConn, &pod, shell)
 		if err != nil {
-			continue
-		}
-
-		handler := NewStreamHandler(wsConn)
-		if err = executor.StreamWithContext(c.Request.Context(), remotecommand.StreamOptions{
-			Stdin:             handler,
-			Stdout:            handler,
-			Stderr:            handler,
-			TerminalSizeQueue: handler,
-			Tty:               true,
-		}); err != nil {
 			logger.Error().Err(err).Msg("remotecommand executor fail")
 			continue
 		}
 	}
+
+}
+
+func RunTerminal(ctx context.Context, conn *WsConn, pod *v1.Pod, shell string) error {
+	req := k8s.GetClient().Client.CoreV1().RESTClient().Post().Resource("pods").
+		Name(pod.Name).Namespace(pod.Namespace).SubResource("exec").
+		VersionedParams(&v1.PodExecOptions{
+			Container: pod.Status.ContainerStatuses[0].Name,
+			Command:   []string{shell},
+			Stdin:     true,
+			Stdout:    true,
+			Stderr:    true,
+			TTY:       true,
+		}, scheme.ParameterCodec)
+
+	executor, err := remotecommand.NewSPDYExecutor(k8s.GetClient().Config, "POST", req.URL())
+	if err != nil {
+		return err
+	}
+
+	handler := NewStreamHandler(conn)
+	return executor.StreamWithContext(ctx,
+		remotecommand.StreamOptions{
+			Stdin: handler, Stdout: handler, Stderr: handler,
+			TerminalSizeQueue: handler, Tty: true,
+		})
 }

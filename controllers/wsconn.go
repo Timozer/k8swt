@@ -60,7 +60,7 @@ func (w *WsConn) ReadLoop() {
 	for {
 		select {
 		case <-w.ctx.Done():
-			logger.Info().Msg("request done")
+			logger.Debug().Msg("request done")
 			return
 		default:
 			msgType, data, err := w.conn.ReadMessage()
@@ -68,7 +68,7 @@ func (w *WsConn) ReadLoop() {
 				logger.Error().Err(err).Msg("read message fail")
 				return
 			}
-			logger.Info().Int("WsMsgType", msgType).Str("Data", string(data)).Msg("ReadMsg")
+			logger.Debug().Int("WsMsgType", msgType).Str("Data", string(data)).Msg("ReadMsg")
 			w.inChan <- &WsMsg{MsgType: msgType, Data: data}
 		}
 	}
@@ -82,10 +82,10 @@ func (w *WsConn) WriteLoop() {
 	for {
 		select {
 		case <-w.ctx.Done():
-			logger.Info().Msg("request done")
+			logger.Debug().Msg("request done")
 			return
 		case msg := <-w.outChan:
-			logger.Info().Int("WsMsgType", msg.MsgType).Str("Data", string(msg.Data)).Msg("WriteMsg")
+			logger.Debug().Int("WsMsgType", msg.MsgType).Str("Data", string(msg.Data)).Msg("WriteMsg")
 			err := w.conn.WriteMessage(msg.MsgType, msg.Data)
 			if err != nil {
 				logger.Error().Err(err).Msg("write message fail")
@@ -103,4 +103,8 @@ func (w *WsConn) Write(msgType int, data []byte) error {
 func (w *WsConn) Read() (int, []byte, error) {
 	msg := <-w.inChan
 	return msg.MsgType, msg.Data, nil
+}
+
+func (w *WsConn) Close() {
+	w.conn.Close()
 }
