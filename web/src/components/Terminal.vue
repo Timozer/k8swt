@@ -40,7 +40,7 @@ import { AttachAddon } from "xterm-addon-attach";
 import { SerializeAddon } from "xterm-addon-serialize";
 import { Unicode11Addon } from "xterm-addon-unicode11";
 import { WebLinksAddon } from "xterm-addon-web-links";
-import { AdventureTime } from "xterm-theme";
+import { CanvasAddon } from "xterm-addon-canvas";
 import 'xterm/css/xterm.css'
 
 const fitAddon = new FitAddon();
@@ -95,7 +95,6 @@ export default {
             let term = new Terminal({
                 convertEol: true, scrollback: 1000, 
                 cursorBlink: true, allowProposedApi: true,
-                theme: AdventureTime,
             })
             term.loadAddon(new AttachAddon(this.ws))
             term.loadAddon(new SerializeAddon())
@@ -112,6 +111,7 @@ export default {
             // });
 
             term.open(this.$refs.terminal)
+            term.loadAddon(new CanvasAddon())
             term.loadAddon(fitAddon)
             fitAddon.fit()
 
@@ -145,7 +145,9 @@ export default {
             let envStr = "";
             let envs = skipQueryParams["envs"].split(";");
             envs.forEach(k => {
-                envStr += "export " + k + "; "
+                if (k.length > 0) {
+                    envStr += "export " + k + "; "
+                }
             })
             if (envStr.length > 0) {
                 this.ws.send(envStr)
@@ -155,7 +157,9 @@ export default {
             let cmdStr = ""
             let cmds = skipQueryParams["cmds"].split(";");
             cmds.forEach(k => {
-                cmdStr += k + "\n"
+                if (k.length > 0) {
+                    cmdStr += k + "\n"
+                }
             })
             if (cmdStr.length > 0) {
                 this.ws.send(cmdStr)
