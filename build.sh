@@ -7,6 +7,10 @@ fi
 
 CGO_ENABLED=0 go build -ldflags="-s -w" -o k8swt
 
+cd web
+npm run build
+cd -
+
 sudo docker buildx build --output type=docker -t 878592748/k8swt:latest .
 
 sudo docker tag 878592748/k8swt:latest 878592748/k8swt:$1

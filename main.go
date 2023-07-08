@@ -81,13 +81,14 @@ func main() {
 	r := gin.Default()
 	r.Use(ReqId(), Logger())
 
+	webDir := "."
 	if *gArgs.Dev {
-		r.Static("/js", "web/dist/js")
-		r.LoadHTMLGlob("web/dist/*.html")
-	} else {
-		r.Static("/js", "./dist/js")
-		r.LoadHTMLGlob("./dist/*.html")
+		webDir = "web"
 	}
+	r.Static("/static", webDir+"/build/static")
+	r.LoadHTMLGlob(webDir + "/build/*.html")
+	r.StaticFile("/favicon.ico", webDir+"/build/favicon.ico")
+	r.StaticFile("/manifest.json", webDir+"/build/manifest.json")
 
 	r.GET("/", controllers.Index)
 	r.GET("/ws", controllers.WsProcess)
