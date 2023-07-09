@@ -1,0 +1,14 @@
+.collapse {
+    position: fixed;
+    top: 0px;
+    right: 0px;
+    padding: 0px;
+    margin: 0px;
+    z-index: 999;
+}
+
+.collapse-button, .collapse-button img {
+    padding: 0px;
+    border-width: 0px;
+    width: 17px;
+}

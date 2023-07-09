@@ -1,9 +1,13 @@
 .terminal-container {
     padding: 0px;
+    margin: 0px;
     height: 100%;
-    /* overflow-x: hidden; */
 }
 
 .xterm {
     height: 100%;
+}
+
+.xterm-screen {
+    width: 100%;
 }

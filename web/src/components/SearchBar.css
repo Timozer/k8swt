@@ -1,0 +1,42 @@
+.search_bar{
+    background-color: white;
+    padding: 10px;
+    font-size: 12px;
+}
+.search_bar label{
+    vertical-align: middle;
+    display: inline-block;
+}
+
+.search_bar input{
+    vertical-align: middle;
+}
+
+.search_bar_input {
+    display: inline-block;
+}
+
+.search_bar_buttons {
+    display: inline-block;
+}
+
+.search_bar_buttons button {
+    border-width: 0px;
+    vertical-align: middle;
+    margin-left: 2px;
+    background-color: transparent;
+}
+
+.search_bar_buttons img {
+    padding: 0px;
+    width: auto;
+    height: 16px;
+}
+
+.search_bar_buttons button:hover {
+    background-color: #F6F6F6;
+}
+
+.search_bar_buttons button:active {
+    background-color: lightgray;
+}
